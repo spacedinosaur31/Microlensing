@@ -24,8 +24,8 @@ for root, dirs, files in os.walk(dir):
 
             catfl = lc[11] #type(catfl) = numpy.ndarray
             nepochs = lc[6] #Anzahl Messpunkte, type(nepochs) = int
-            filter = lc[1] #g (1), r (2) or i (3) -> only r
-            if sum(catfl) == 0 and nepochs > 30 and filter == 2: 
+            filterid = lc[1] #g (1), r (2) or i (3) -> only r, type(filter) = int
+            if sum(catfl) == 0 and nepochs > 30 and filterid == 2: 
                 a_filtered_vorfilter.append(lc)
       
 #Grobfilter: zu hohe Skewness & zu hoher Neumann-Statistik-Wert raus
