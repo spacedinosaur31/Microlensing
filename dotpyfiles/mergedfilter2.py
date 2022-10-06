@@ -1,3 +1,4 @@
+from asyncio import ALL_COMPLETED
 import pyarrow.parquet
 import pandas 
 import numpy 
@@ -13,6 +14,15 @@ max_neumann = 1.5 # circa, in work
 # LISTS
 a_filtered_vorfilter = [] 
 a_filtered_grobfilter = []
+
+# FUNCTIONS
+def neumann(array):
+    neumann_lst = numpy.zeros(len(array))
+    std = numpy.std(array)
+    for i in range(1, len(array)):
+        neumann_lst[i] = ((array[i] - array[i-1])**2)/((len(array)-1)*(std**2))
+    neumann_value = numpy.sum(neumann_lst)
+    return neumann_value
 
 # dir = "C:\Kanti\Microlensing\Python\Parquet-Files" #path to root directory 
 dir = "./data" #path to root directory
@@ -32,39 +42,7 @@ class O_indices: #object for indices as "objectid", not as "lc[0]", für Übersi
     clrcoeff = 10
     catflags = 11
 
-o_indices = O_indices()
-
-# o_indices = {
-#     "objectid" : 0,
-#     "filterid" : 1,
-#     "fieldid" : 2,
-#     "rcid" : 3,
-#     "objra" : 4,
-#     "objdec" : 5,
-#     "nepochs" : 6,
-#     "hmjd" : 7,
-#     "mag" : 8,
-#     "magerr" : 9,
-#     "clrcoeff" : 10,
-#     "catflags" : 11,
-# }
-
-# a_s_column_name = [
-#      "objectid", # 
-#      "filterid", # 
-#      "fieldid",
-#      "rcid",
-#      "objra",
-#      "objdec",
-#      "nepochs",
-#      "hmjd",
-#      "mag",
-#      "magerr",
-#      "clrcoeff",
-#     "catflags",
-# ]
-
-# a_a_value__example = [
+# a_a_all_LC__example = [
 #     #[...],
 #     [ 
 #        468316400000000, #=> objectid", # 
@@ -83,37 +61,21 @@ o_indices = O_indices()
 #     #[...],
 # ]
 
+o_indices = O_indices()
+a_a_objectid_filtered = []
 
 
 
-a_a_value__original_merged = None
-a_a_value__original_filtered = []
 
 for s_path_root, a_s_folder, a_s_file in os.walk(dir):
     for s_file in a_s_file:
         o_table = pyarrow.parquet.read_table(
                 os.path.join(s_path_root, s_file)
             )
-        # print(o_table.schema.pandas_metadata)
-        o_parquet_json_decoded = o_table.schema.pandas_metadata
-        print(o_table.schema.pandas_metadata)
-        # o_parquet_file_json = json.loads(str(o_table.schema.pandas_metadata))
-        # print(o_parquet_file_json)
-        # print(o_table.schema.types)
-        o_pandas_data_frame = o_table.to_pandas()
-        # print(o_pandas_data_frame.values[0].dtype)
-        # print(type(o_pandas_data_frame.values[0][0]))
-        # a_a_type = [(o_pandas_data_frame.columns[n_index],numpy.dtype(o_parquet_json_decoded["columns"][n_index]["numpy_type"])) for (n_index, value) in enumerate(o_pandas_data_frame.values[0])]
-        a_a_type = [(o_pandas_data_frame.columns[n_index],o_parquet_json_decoded["columns"][n_index]["numpy_type"]) for (n_index, value) in enumerate(o_pandas_data_frame.values[0])]
-        # print(a_type)
-        # exit(1)
 
-        # exit(1)
-        
-        # exit(1)
-        # print(o_pandas_data_frame.columns)
-        # print(o_pandas_data_frame.__dict__)
-        a_a_value__original = o_pandas_data_frame.values #makes np.array()
+        o_pandas_data_frame = o_table.to_pandas()
+
+        a_a_all_LC_original = o_pandas_data_frame.values #makes np.array()
         
         # if(a_a_value__original_merged == None):
         #     a_a_value__original_merged = numpy.copy(a_a_value__original)
@@ -121,20 +83,39 @@ for s_path_root, a_s_folder, a_s_file in os.walk(dir):
         #     a_a_value__original_merged = numpy.concatenate((a_a_value__original_merged, a_a_value__original))
 
 #make filtered list right away
-        a_a_value__filtered = [ 
-            # a_value # 'return value'
-            a_value# 'return value'
+        a_a_objectid_filtered.append( 
+            a_LC[o_indices.objectid]# a_value # 'return value'
             for
-            a_value # variable name in loop
-            in a_a_value__original  # array name of iterated array
+            a_LC # variable name in loop
+            in a_a_all_LC_original  # array name of iterated array
 
             if (
-                a_value[o_indices.catflags].sum() == 0 
-                and a_value[o_indices.nepochs] > 30
-                and a_value[o_indices.filterid] == 2 
+                a_LC[o_indices.catflags].sum() == 0 
+                and a_LC[o_indices.nepochs] > 30
+                and a_LC[o_indices.filterid] == 2 
             )  # if this is true, 'return value' is returned
-        ]  
+        )
 
+a_a_skew_nm_lc_filtered = numpy.array()
+
+for s_path_root, a_s_folder, a_s_file in os.walk(dir):
+    for s_file in a_s_file:
+        o_table = pyarrow.parquet.read_table(
+                os.path.join(s_path_root, s_file)
+            )
+
+        o_pandas_data_frame = o_table.to_pandas()
+
+        a_a_all_LC_original = o_pandas_data_frame.values #makes np.array()
+        
+        a_a_skew_nm_lc_filtered.append(
+            a_LC for a_LC in a_a_all_LC_original
+            if
+            numpy.skew(a_LC[o_indices.mag]) <= (10**((neumann(a_LC) - c)/a) - b)  
+        )
+
+with open(f"./filtered/{s_file}_filtered.npy", 'wb') as o_file:
+        numpy.save(o_file, a_a_value__filtered)        
         # o_pandas_data_frame_filtered = pandas.DataFrame(
         #     a_a_value__filtered, 
         #     columns = o_pandas_data_frame.columns
@@ -165,11 +146,9 @@ for s_path_root, a_s_folder, a_s_file in os.walk(dir):
         # print(a_type)
         # print(a_type)
         # exit(1)      
-        print(a_a_type)  
-        a_a_value__filtered = numpy.array( # Problem: make sth similar to .parquet with columns + column names
-            a_a_value__filtered, 
-            # dtype=a_a_type
-            dtype= object)
+        # a_a_value_filtered = numpy.array( # Problem: make sth similar to .parquet with columns + column names
+        #     a_a_all_LC_original[o_indices.objectid] #so sieht man beim Index angeben gleich, was es ist
+            # )
             # [
             #     (s,s)
             #     for 
@@ -180,20 +159,6 @@ for s_path_root, a_s_folder, a_s_file in os.walk(dir):
             # o_pandas_data_frame.dtype
             
         # a_a_value__filtered.dtype = o_dtype
-        with open(f"./filtered/{s_file}_filtered.npy", 'wb') as o_file:
-            numpy.save(o_file, a_a_value__filtered)
-
-
-
-
-# 2 ^ 16 = 65000
-
-# 1111 1111 1111 1111 = 2 byes 
-# "65000"
-#  ^
-#   ^
-#    ^
-#     ^   5 bytes
 
 
 # print(a_a_value__original[0][o_indices.objectid])

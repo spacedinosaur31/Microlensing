@@ -1,0 +1,33 @@
+User-agent: *
+Disallow: /error/
+Disallow: /ttweb/
+Disallow: /stats/
+Disallow: /cgi-bin/
+Disallow: /tps/
+Disallow: /workspace/
+Disallow: /work/
+Disallow: /2massqa/
+Disallow: /ibe/qos
+Disallow: /ibe/error/
+Disallow: /ibe/data/
+Disallow: /ibe/search/
+Disallow: /ibe/sia/
+Disallow: /data/download/
+Disallow: /data/Planck/cutouts/
+Disallow: /data/Planck/ercsc_v1.3/ercsc_cutouts/
+Disallow: /data/Planck/release_1/beams/unf_beams/files/
+Disallow: /data/Planck/release_1/pccs1_cutouts/
+Disallow: /data/Planck/release_2/all-sky-maps/maps/
+Disallow: /data/Planck/release_2/beams/
+Disallow: /data/Planck/release_2/toi/
+Disallow: /data/IRAS_Level1/laundr_data/
+Disallow: /*.fits$
+Disallow: /*.zip$
+Disallow: /*.gz$
+Disallow: /*.tgz$
+Disallow: /*.h5$
+Disallow: /*.hdf5$
+
+User-agent: Wget
+Disallow: 
+
