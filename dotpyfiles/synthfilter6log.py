@@ -48,9 +48,9 @@ def neumann(array):
     n = np.sum(neumann_lst)
     return n
 
-for a in [x for x in range(5, 25)]: # range()-Funktion lässt keine float-steps zu
-    for b in [x for x in range(5, 30)]:
-        for c in [x*0.1 for x in range(10, 200)]:
+for a in [x*0.1 for x in range(-10, -1)]: # range()-Funktion lässt keine float-steps zu
+    for b in [x*0.1 for x in range(10, 20)]:
+        for c in [x*0.1 for x in range(5, 20)]:
             #Lists 
             lightc_lst = [0 for i in range(LCamount)] # stellt synthetischen Datensatz dar -> pro LC: Liste wie [Index (-> Object-ID), Magnitudenwerte, Zeitpunkte]
             detect_lst_binary = np.zeros(LCamount) # Array gefilterter ML-Events, np.zeros(x) macht Liste mit x Nullen
@@ -86,7 +86,7 @@ for a in [x for x in range(5, 25)]: # range()-Funktion lässt keine float-steps 
                     lightc_lst[i] = np.array([i, t, mag, umin, tE, lc_skew_value, lc_neumann_value], dtype = object)
 
                     # FILTER HERE:
-                    if lc_neumann_value <= (a*lc_skew_value + b):
+                    if lc_skew_value <= 10**((lc_neumann_value - c)/a) - b: # no log() because then skew can't be negative but should
                         found += 1
                     else:
                         lost += 1
@@ -111,7 +111,7 @@ for a in [x for x in range(5, 25)]: # range()-Funktion lässt keine float-steps 
                     lightc_lst[i] = np.array([i, t, mag, None, None, lc_skew_value, lc_neumann_value], dtype = object)
 
                     # FILTER HERE:
-                    if lc_neumann_value <= (a*lc_skew_value + b):
+                    if lc_skew_value <= (10**((lc_neumann_value - c)/a) - b):
                         trap += 1
 
             foundlostrelations_list.append(found/((lost+1)*(trap+1))) # -> the bigger this value, the better the filter, lost/trap+1 because otherwise /zero
@@ -139,6 +139,6 @@ for a in [x for x in range(5, 25)]: # range()-Funktion lässt keine float-steps 
                 #     # print(truetruth_lst_binary)
                 #     # print(detect_lst_binary)
             # else:
-            #         print("Noch nicht vers8j8j888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888tandener scheinbarer Fehlversuch. Nochmal ausführen bis es klappt.")
+            #         print("Noch nicht verstandener scheinbarer Fehlversuch. Nochmal ausführen bis es klappt.")
 print("maximum relation: ", max(foundlostrelations_list))
 print(skew_neumann_combinations[foundlostrelations_list.index(max(foundlostrelations_list))])
