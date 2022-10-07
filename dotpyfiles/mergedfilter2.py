@@ -64,8 +64,6 @@ o_indices = O_indices()
 a_a_objectid_filtered = []
 
 
-
-
 for s_path_root, a_s_folder, a_s_file in os.walk(dir):
     for s_file in a_s_file:
         o_table = pyarrow.parquet.read_table(
