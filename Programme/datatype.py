@@ -5,6 +5,7 @@ from collections import Counter
 
 #LC-Paket-Tabelle 
 df = pq.read_table('C:\Kanti\Microlensing\Python\Parquet-Files\ztf_000870_zg_c02_q2_dr7.parquet').to_pandas()
+print(type(df))
 list_allLC = df.values.tolist() #converts pandas-Dataframe to list
 #pd_allLC = df.loc[:] 
 print(type(list_allLC))#list

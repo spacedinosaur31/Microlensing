@@ -9,7 +9,7 @@ import wget
 # LISTS
 a_filtered_vorfilter = [] 
 a_filtered_grobfilter = []
-
+a_errorfiles = []
 # FUNCTIONS
 def neumann(array):
     neumann_lst = numpy.zeros(len(array))
@@ -84,56 +84,65 @@ o_indices = O_indices()
 
 s_path_current_directory = os.path.dirname(os.path.realpath(__file__))
 
-n_len_a_s_url__merged = len(a_s_url__merged)
-print(n_len_a_s_url__merged)
-# for s_url in a_s_url__merged:
-#     try:
-#         s_urlpath_file = s_url.split("://").pop()
-#         s_name_file = s_urlpath_file.split("/").pop()    
-#         response = wget.download(s_url)
+n_len_a_s_url__merged = len(a_s_url__merged) # 163319
+
+for s_url in a_s_url__merged:
+    try:
+        s_urlpath_file = s_url.split("://").pop()
+        s_name_file = s_urlpath_file.split("/").pop()    
+        response = wget.download(s_url)
         
-#         # process the data
-#         n_index = a_s_url__merged.index(s_url)
-#         print(f"-----------processing----------------")
-#         print(f"file: {n_index} of {n_len_a_s_url__merged}")
-#         print("")
+        # process the data
+        n_index = a_s_url__merged.index(s_url)
+        print(f"-----------processing----------------")
+        print(f"file: {n_index} of {n_len_a_s_url__merged}")
+        print("")
 
-#         s_path_file = s_path_current_directory + "/" + s_name_file
+        s_path_file = s_path_current_directory + "/" + s_name_file
 
-#         o_table = pyarrow.parquet.read_table(
-#             s_path_file    
-#         )
+        o_table = pyarrow.parquet.read_table(
+            s_path_file    
+        )
 
 
-#         o_pandas_data_frame = o_table.to_pandas()
+        o_pandas_data_frame = o_table.to_pandas()
 
-#         a_a_all_LC = o_pandas_data_frame.values #makes np.array()
+        a_a_all_LC = o_pandas_data_frame.values #makes np.array()
         
-#         # if(a_a_value__original_merged == None):
-#         #     a_a_value__original_merged = numpy.copy(a_a_value__original)
-#         # else: 
-#         #     a_a_value__original_merged = numpy.concatenate((a_a_value__original_merged, a_a_value__original))
+        # if(a_a_value__original_merged == None):
+        #     a_a_value__original_merged = numpy.copy(a_a_value__original)
+        # else: 
+        #     a_a_value__original_merged = numpy.concatenate((a_a_value__original_merged, a_a_value__original))
 
-#     #make filtered list right away
-#         a_a_all_LC = numpy.array([ 
-#             a_LC# a_value # 'return value'
-#             for
-#             a_LC # variable name in loop
-#             in a_a_all_LC  # array name of iterated array
-#             if (
-#                 a_LC[o_indices.catflags].sum() == 0 
-#                 and a_LC[o_indices.nepochs] > 30
-#                 and a_LC[o_indices.filterid] == 2
-#             )  # if this is true, 'return value' is returned
-#         ])
+    #make filtered list right away
+        a_a_LC_vorfilter = numpy.array([ 
+            a_LC# a_value # 'return value'
+            for
+            a_LC # variable name in loop
+            in a_a_all_LC  # array name of iterated array
+            if (
+                a_LC[o_indices.catflags].sum() == 0 
+                and a_LC[o_indices.nepochs] > 30
+                and a_LC[o_indices.filterid] == 2
+            )  # if this is true, 'return value' is returned
+        ])
 
-#         a_a_all_LC = numpy.array([
-#             a_LC for a_LC in a_a_all_LC
-#             if
-#             (skew(a_LC[o_indices.mag]) <= (10**((neumann(a_LC) - 1)/1) - 1)) #params in work
-#         ])
+        print(len(a_a_LC_vorfilter))
 
-#         os.rename(s_name_file, s_name_file + "_filtered")
+        a_a_LC_hauptfilter = numpy.array([
+            a_LC for a_LC in a_a_LC_vorfilter
+            if
+            (skew(a_LC[o_indices.mag]) <= (10**((neumann(a_LC[o_indices.mag]) - 1)/1) - 1)) #params in work
+        ])
         
-#     except:
-#         continue
+        if len(a_a_LC_hauptfilter) > 0:
+            numpy.save(s_name_file + "_filtered", a_a_LC_hauptfilter) # file is saved in s_name_file_filtered.npy
+        os.remove(s_path_file) # delete old file
+        
+        print(len(a_a_LC_hauptfilter))
+        
+    except:
+        a_errorfiles.append(s_name_file)
+        os.remove(s_path_file) # delete old file
+
+numpy.save("a_errorfiles", a_errorfiles) 
