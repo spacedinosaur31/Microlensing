@@ -5,10 +5,11 @@ import os #functions for interacting with operating system
 from scipy.stats import skew
 import json
 import wget
+import time
 
 # LISTS
-a_errorfiles = np.zeros(163319)
-a_a_objectids_vorfilter = np.zeros(163319)
+a_errorfiles = [0 for x in range(163319)]
+a_a_objectids_vorfilter = [0 for x in range(163319)]
 
 # FUNCTIONS
 def neumann(array):
@@ -87,59 +88,60 @@ s_path_current_directory = os.path.dirname(os.path.realpath(__file__))
 n_len_a_s_url__merged = len(a_s_url__merged) # 163319
 
 for s_url in a_s_url__merged:
-    try:
-        s_urlpath_file = s_url.split("://").pop()
-        s_name_file = s_urlpath_file.split("/").pop()    
-        response = wget.download(s_url)
-        
-        # process the data
-        n_index = a_s_url__merged.index(s_url)
-        print(f"-----------processing----------------")
-        print(f"file: {n_index} of {n_len_a_s_url__merged}")
-        print("")
+    if "zr" in s_url:
+        try:
+            s_urlpath_file = s_url.split("://").pop()
+            s_name_file = s_urlpath_file.split("/").pop()    
+            response = wget.download(s_url)
+            
+            # process the data
+            n_index = a_s_url__merged.index(s_url)
+            print(f"-----------processing----------------")
+            print(f"file: {n_index} of {n_len_a_s_url__merged}")
+            print(time.time())
+            print("")
 
-        s_path_file = s_path_current_directory + "/" + s_name_file
+            s_path_file = s_path_current_directory + "/" + s_name_file
 
-        o_table = pyarrow.parquet.read_table(
-            s_path_file    
-        )
+            o_table = pyarrow.parquet.read_table(
+                s_path_file    
+            )
 
 
-        o_pandas_data_frame = o_table.to_pandas()
+            o_pandas_data_frame = o_table.to_pandas()
 
-        a_a_all_LC = o_pandas_data_frame.values #makes np.array()
+            a_a_all_LC = o_pandas_data_frame.values #makes np.array()
+            
+
+        #make filtered list right away
+            a_a_LC_vorfilter = np.array([ 
+                a_LC# a_value # 'return value'
+                for
+                a_LC # variable name in loop
+                in a_a_all_LC  # array name of iterated array
+                if (
+                    a_LC[o_indices.catflags].sum() == 0 
+                    and a_LC[o_indices.nepochs] > 30
+                )  # if this is true, 'return value' is returned
+            ])
         
-    #make filtered list right away
-        a_a_LC_vorfilter = np.array([ 
-            a_LC# a_value # 'return value'
-            for
-            a_LC # variable name in loop
-            in a_a_all_LC  # array name of iterated array
-            if (
-                a_LC[o_indices.catflags].sum() == 0 
-                and a_LC[o_indices.nepochs] > 30
-                and a_LC[o_indices.filterid] == 2
-            )  # if this is true, 'return value' is returned
-        ])
-     
-        a_a_objectids_vorfilter[[a_s_url__merged.index(s_url)]] = np.array(
-             a_LC[O_indices.objectid]
-            for a_LC in a_a_LC_vorfilter
-        )
-           
-        a_a_LC_hauptfilter = np.array([
-            a_LC for a_LC in a_a_LC_vorfilter
-            if
-            (skew(a_LC[o_indices.mag]) <= (10**((neumann(a_LC[o_indices.mag]) - 1.3)/-0.4) - 1.6)) #params in work
-        ])
-        
-        if len(a_a_LC_hauptfilter) > 0:
-            np.save(s_name_file + "_filtered", a_a_LC_hauptfilter) # file is saved in s_name_file_filtered.npy
-        os.remove(s_path_file) # delete old file
-        
-        
-    except:
-        a_errorfiles[a_s_url__merged.index(s_url)] = s_name_file
-        os.remove(s_path_file) # delete old file
+            a_a_objectids_vorfilter[a_s_url__merged.index(s_url)] = np.array(
+                a_LC[O_indices.objectid]
+                for a_LC in a_a_LC_vorfilter
+            )
+            
+            a_a_LC_hauptfilter = np.array([
+                a_LC for a_LC in a_a_LC_vorfilter
+                if
+                (skew(a_LC[o_indices.mag]) <= (10**((neumann(a_LC[o_indices.mag]) - 1.3)/-0.4) - 1.6)) #params in work
+            ])
+            
+            if len(a_a_LC_hauptfilter) > 0:
+                np.save(s_name_file + "_filtered", a_a_LC_hauptfilter) # file is saved in s_name_file_filtered.npy
+            os.remove(s_path_file) # delete old file
+                        
+        except:
+            a_errorfiles[a_s_url__merged.index(s_url)] = s_name_file
+            os.remove(s_path_file) # delete old file
 np.save("a_a_objectids_vorfilter", a_a_objectids_vorfilter)
 np.save("a_errorfiles", a_errorfiles) 
