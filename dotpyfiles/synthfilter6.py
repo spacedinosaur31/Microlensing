@@ -28,7 +28,7 @@ mean_mag = 20.421268  # Mittelwert von 2 fields
 mean_luminosity = 10**(mean_mag/(-2.5)) # convert magnitude-mean to luminosity-value for multiplication by amplification factor 
 mean_neumann = 1.6 # circa
 C = 0 # parameter for magnitude-calculation
-LCamount = 20 # x LCs will be generated
+LCamount = 1000 # x LCs will be generated
 lost = 0
 trap = 0
 found = 0
@@ -92,15 +92,15 @@ for i in range(LCamount):
         neumann_ML.append(lc_neumann_value)
 
         lightc_lst[i] = np.array([i, t, mag, umin, tE, lc_skew_value, lc_neumann_value], dtype = object)
-        if (lc_skew_value - 1) < (-lc_neumann_value):
+        if (lc_skew_value < 0.9) and (lc_neumann_value < 1.2):
             detect_lst_binary[i] = 1
             found += 1
         else:
             detect_lst_binary[i] = 0
             lost += 1
 
-        plt.figure() #make coordinate system
-        plt.plot(t, mag,".", color = "red")#t,mag = lists! -> A(t)+0.2*random -> adds random number to whole list -> for loop to handle each value separately!
+        # plt.figure() #make coordinate system
+        # plt.plot(t, mag,".", color = "red")#t,mag = lists! -> A(t)+0.2*random -> adds random number to whole list -> for loop to handle each value separately!
 
     else: 
         
@@ -118,13 +118,13 @@ for i in range(LCamount):
         skew_noML.append(lc_skew_value)
         neumann_noML.append(lc_neumann_value)
         lightc_lst[i] = np.array([i, t, mag, None, None, lc_skew_value, lc_neumann_value], dtype = object)
-        if lc_skew_value - 1 < -lc_neumann_value:
+        if (lc_skew_value < 0.9) and (lc_neumann_value < 1.2):
             detect_lst_binary[i] = 1
             trap += 1
         else:
             detect_lst_binary[i] = 0
-        plt.figure() # make coordinate system
-        plt.plot(t, mag,".", color = "red")#t,a = lists! -> A(t)+0.2*random -> adds random number to whole list -> for loop to handle each value separately!
+        # plt.figure() # make coordinate system
+        # plt.plot(t, mag,".", color = "red")#t,a = lists! -> A(t)+0.2*random -> adds random number to whole list -> for loop to handle each value separately!
 
 
 
@@ -147,14 +147,14 @@ plt.xlabel("Skewness")
 plt.ylabel("Neumann-Wert")
 plt.title("Skewness-neumann")
 plt.show()
-#plt.savefig("skew_nm_plt.jpg")
+plt.savefig("skew_nm_plt1.jpg")
 
 if np.count_nonzero(detect_lst_binary == 1) != 0: #wenn kein sog "Fehlversuch"
     print("verlorene ML: ", lost)
     print("scheinbare ML: ", trap)
     print("gefundene ML: ", found)
-    print(truetruth_lst_binary)
-    print(detect_lst_binary)
+    # print(truetruth_lst_binary)
+    # print(detect_lst_binary)
 else:
         print("Noch nicht verstandener scheinbarer Fehlversuch. Nochmal ausführen bis es klappt.")
 

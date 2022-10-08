@@ -1,22 +1,22 @@
 import pyarrow.parquet
 import pandas 
-import numpy 
+import numpy as np
 import os #functions for interacting with operating system
 from scipy.stats import skew
 import json
 import wget
 
 # LISTS
-a_filtered_vorfilter = [] 
-a_filtered_grobfilter = []
-a_errorfiles = []
+a_errorfiles = np.zeros(163319)
+a_a_objectids_vorfilter = np.zeros(163319)
+
 # FUNCTIONS
 def neumann(array):
-    neumann_lst = numpy.zeros(len(array))
-    std = numpy.std(array)
+    neumann_lst = np.zeros(len(array))
+    std = np.std(array)
     for i in range(1, len(array)):
         neumann_lst[i] = ((array[i] - array[i-1])**2)/((len(array)-1)*(std**2))
-    neumann_value = numpy.sum(neumann_lst)
+    neumann_value = np.sum(neumann_lst)
     return neumann_value
 
 # dir = "C:\Kanti\Microlensing\Python\Parquet-Files" #path to root directory 
@@ -109,13 +109,8 @@ for s_url in a_s_url__merged:
 
         a_a_all_LC = o_pandas_data_frame.values #makes np.array()
         
-        # if(a_a_value__original_merged == None):
-        #     a_a_value__original_merged = numpy.copy(a_a_value__original)
-        # else: 
-        #     a_a_value__original_merged = numpy.concatenate((a_a_value__original_merged, a_a_value__original))
-
     #make filtered list right away
-        a_a_LC_vorfilter = numpy.array([ 
+        a_a_LC_vorfilter = np.array([ 
             a_LC# a_value # 'return value'
             for
             a_LC # variable name in loop
@@ -126,23 +121,25 @@ for s_url in a_s_url__merged:
                 and a_LC[o_indices.filterid] == 2
             )  # if this is true, 'return value' is returned
         ])
-
-        print(len(a_a_LC_vorfilter))
-
-        a_a_LC_hauptfilter = numpy.array([
+     
+        a_a_objectids_vorfilter[[a_s_url__merged.index(s_url)]] = np.array(
+             a_LC[O_indices.objectid]
+            for a_LC in a_a_LC_vorfilter
+        )
+           
+        a_a_LC_hauptfilter = np.array([
             a_LC for a_LC in a_a_LC_vorfilter
             if
-            (skew(a_LC[o_indices.mag]) <= (10**((neumann(a_LC[o_indices.mag]) - 1)/1) - 1)) #params in work
+            (skew(a_LC[o_indices.mag]) <= (10**((neumann(a_LC[o_indices.mag]) - 1.3)/-0.4) - 1.6)) #params in work
         ])
         
         if len(a_a_LC_hauptfilter) > 0:
-            numpy.save(s_name_file + "_filtered", a_a_LC_hauptfilter) # file is saved in s_name_file_filtered.npy
+            np.save(s_name_file + "_filtered", a_a_LC_hauptfilter) # file is saved in s_name_file_filtered.npy
         os.remove(s_path_file) # delete old file
         
-        print(len(a_a_LC_hauptfilter))
         
     except:
-        a_errorfiles.append(s_name_file)
+        a_errorfiles[a_s_url__merged.index(s_url)] = s_name_file
         os.remove(s_path_file) # delete old file
-
-numpy.save("a_errorfiles", a_errorfiles) 
+np.save("a_a_objectids_vorfilter", a_a_objectids_vorfilter)
+np.save("a_errorfiles", a_errorfiles) 
