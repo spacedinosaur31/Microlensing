@@ -8,8 +8,8 @@ import wget
 import time
 
 # LISTS
-a_errorfiles = [0 for x in range(163319)]
-a_a_objectids_vorfilter = [0 for x in range(163319)]
+a_errorfiles = [0 for x in range(69705)]
+a_a_objectids_vorfilter = [0 for x in range(69705)]
 
 # FUNCTIONS
 def neumann(array):
@@ -88,7 +88,7 @@ s_path_current_directory = os.path.dirname(os.path.realpath(__file__))
 n_len_a_s_url__merged = len(a_s_url__merged) # 163319
 
 for s_url in a_s_url__merged:
-    if "zr" in s_url:
+    if "zr" in s_url: #reduces to 69705 
         try:
             s_urlpath_file = s_url.split("://").pop()
             s_name_file = s_urlpath_file.split("/").pop()    
